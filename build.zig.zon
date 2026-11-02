@@ -1,0 +1,17 @@
+.{
+    .name = .habitat,
+    .version = "0.0.0",
+    .fingerprint = 0x3b37b2e8a9f8a74b, // Changing this has security and trust implications.
+    .minimum_zig_version = "0.17.0",
+    .dependencies = .{
+        .vaxis = .{
+            .url = "git+https://github.com/rockorager/libvaxis#0620b34e091deaa6f64608922be3814147128dfb",
+            .hash = "vaxis-0.6.0-BWNV_LoTDQCQSGhvBbu_-fOf3I2P3TIiGaUzCDniO12E",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
+}

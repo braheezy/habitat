@@ -1,0 +1,77 @@
+name: Build and release
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["**"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-x86_64
+            target: x86_64-linux-gnu
+            binary: habitat
+            asset: habitat-linux-x86_64
+          - name: linux-aarch64
+            target: aarch64-linux-gnu
+            binary: habitat
+            asset: habitat-linux-aarch64
+          - name: macos-x86_64
+            target: x86_64-macos
+            binary: habitat
+            asset: habitat-macos-x86_64
+          - name: macos-aarch64
+            target: aarch64-macos
+            binary: habitat
+            asset: habitat-macos-aarch64
+          - name: windows-x86_64
+            target: x86_64-windows-gnu
+            binary: habitat.exe
+            asset: habitat-windows-x86_64.exe
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: mlugg/setup-zig@v2
+        with:
+          version: 0.17.0
+
+      - name: Build
+        run: zig build -Dtarget=${{ matrix.target }} -Doptimize=ReleaseFast
+
+      - name: Name binary
+        run: |
+          mkdir -p dist
+          cp "zig-out/bin/${{ matrix.binary }}" "dist/${{ matrix.asset }}"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: habitat-${{ matrix.name }}
+          path: dist/*
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub release
+    if: github.ref_type == 'tag'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: habitat-*
+          path: dist
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v3
+        with:
+          files: dist/*
+          generate_release_notes: true
